@@ -73,4 +73,6 @@ model Progress {
   section   String
   completed Boolean  @default(false)
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, roadmap, section])
 }

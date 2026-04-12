@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     await prisma.payment.create({
       data: {
         userId: session.user?.id!,
-        amount: 20000,
+        amount: 100, // Reduced to ₹1 for testing
         status: "success",
         orderId: razorpay_order_id,
       },

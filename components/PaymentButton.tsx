@@ -11,7 +11,7 @@ interface PaymentButtonProps {
 
 export default function PaymentButton({ 
   className = "px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all shadow-lg shadow-blue-600/30 disabled:opacity-50",
-  children = "Upgrade to Pro — ₹200/month"
+  children = "Upgrade to Pro — ₹1 (Testing)"
 }: PaymentButtonProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -36,9 +36,18 @@ export default function PaymentButton({
 
       const order = await res.json()
 
+      // Runtime check for environment variable
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      
+      if (!razorpayKey) {
+        alert("Configuration Error: Razorpay Key ID is missing from environment variables.");
+        setLoading(false);
+        return;
+      }
+
       // Open Razorpay checkout
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: order.amount,
         currency: "INR",
         name: "CareerWay",
@@ -75,6 +84,7 @@ export default function PaymentButton({
       rzp.open()
     } catch (error) {
       console.error("Payment failed:", error)
+      alert("Payment Error: " + (error as any).message);
     } finally {
       setLoading(false)
     }

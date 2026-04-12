@@ -11,6 +11,8 @@ import {
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import PaymentButton from "@/components/PaymentButton";
+import SectionProgress from "@/components/SectionProgress";
+
 
 const roadmapData = [
   {
@@ -177,14 +179,35 @@ const roadmapData = [
 export default async function RoadmapPage() {
   const session = await auth()
   let isPaid = false
+  let progressRecords: { section: string; completed: boolean }[] = []
 
   if (session?.user?.email) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { isPaid: true }
+      select: { 
+        id: true,
+        isPaid: true 
+      }
     })
     isPaid = user?.isPaid || false
+
+    if (user?.id) {
+      progressRecords = await prisma.progress.findMany({
+        where: { 
+          userId: user.id,
+          roadmap: "ai-engineer"
+        },
+        select: {
+          section: true,
+          completed: true
+        }
+      })
+    }
   }
+
+  const completedCount = progressRecords.filter(r => r.completed).length
+  const totalSections = roadmapData.length
+  const percentage = Math.round((completedCount / totalSections) * 100)
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
@@ -232,9 +255,14 @@ export default async function RoadmapPage() {
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 mb-4">Your Progress</h3>
                 <div className="w-full bg-slate-100 rounded-full h-2.5 mb-3 overflow-hidden">
-                  <div className="bg-blue-600 h-full rounded-full transition-all duration-500" style={{ width: "0%" }}></div>
+                  <div 
+                    className="bg-blue-600 h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${percentage}%` }}
+                  ></div>
                 </div>
-                <p className="text-sm font-medium text-slate-500 mb-6">0 of 15 sections completed</p>
+                <p className="text-sm font-medium text-slate-500 mb-6">
+                  {completedCount} of {totalSections} sections completed ({percentage}%)
+                </p>
                 
                 {isPaid ? (
                   <div className="w-full py-3.5 px-4 bg-green-50 border border-green-200 text-green-700 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
@@ -244,7 +272,7 @@ export default async function RoadmapPage() {
                 ) : (
                   <PaymentButton className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-md shadow-blue-600/20 text-sm flex items-center justify-center gap-2 group">
                     <Lock className="w-4 h-4" />
-                    Upgrade to Pro - ₹200/mo
+                    Upgrade to Pro - ₹1 (Test)
                   </PaymentButton>
                 )}
               </div>
@@ -284,18 +312,29 @@ export default async function RoadmapPage() {
                 <div className="p-6 md:p-8">
                   {/* Header & Badge */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">
-                      {section.title}
-                    </h2>
-                    {section.isFree ? (
-                      <span className="self-start sm:self-auto px-3 py-1 bg-green-100 text-green-700 border border-green-200 text-xs font-bold uppercase tracking-wider rounded-full shrink-0">
-                        Free
-                      </span>
-                    ) : (
-                      <span className="self-start sm:self-auto px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold uppercase tracking-wider rounded-full shrink-0">
-                        Pro
-                      </span>
-                    )}
+                    <div className="space-y-1">
+                      <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">
+                        {section.title}
+                      </h2>
+                      {session && (section.isFree || isPaid) && (
+                        <SectionProgress 
+                          roadmap="ai-engineer"
+                          section={section.id.toString()}
+                          initialCompleted={progressRecords.find(r => r.section === section.id.toString())?.completed || false}
+                        />
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {section.isFree ? (
+                        <span className="self-start sm:self-auto px-3 py-1 bg-green-100 text-green-700 border border-green-200 text-xs font-bold uppercase tracking-wider rounded-full shrink-0">
+                          Free
+                        </span>
+                      ) : (
+                        <span className="self-start sm:self-auto px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold uppercase tracking-wider rounded-full shrink-0">
+                          Pro
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Topics Covered */}
@@ -367,7 +406,7 @@ export default async function RoadmapPage() {
                            <p className="text-sm text-slate-500 mb-6">Get full access to all course links, projects and advanced material.</p>
                            <PaymentButton className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all shadow-lg shadow-blue-600/30 text-sm flex items-center justify-center gap-2">
                              <Lock className="w-4 h-4" />
-                             Unlock with Pro — ₹200/month
+                             Unlock with Pro — ₹1 (Test)
                            </PaymentButton>
                         </div>
                       </div>

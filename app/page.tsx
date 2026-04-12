@@ -1,8 +1,20 @@
+import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, Map, BookOpen, BrainCircuit } from "lucide-react";
+import { CheckCircle2, ChevronRight, Map, BookOpen, BrainCircuit, Code2, BarChart3, Globe, Sparkles } from "lucide-react";
 import PaymentButton from "@/components/PaymentButton";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+  let isPaid = false;
+
+  if (session?.user?.email) {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { isPaid: true }
+    });
+    isPaid = user?.isPaid || false;
+  }
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
 
@@ -25,9 +37,9 @@ export default function Home() {
             Get structured roadmaps, curated resources and AI powered career guidance to navigate your professional journey with confidence.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/roadmap" className="w-full sm:w-auto">
+            <Link href={session ? "/dashboard" : "/roadmap"} className="w-full sm:w-auto">
               <button className="w-full px-8 py-4 text-base font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 group">
-                Get Started Free
+                {session ? "Go to Dashboard" : "Get Started Free"}
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
@@ -84,107 +96,166 @@ export default function Home() {
           </div>
         </div>
       </section>
++
++      {/* Career Switch Highlight Section */}
++      <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
++        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
++        
++        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
++          <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">
++            Already in Tech? <span className="text-blue-400">Switch Smarter</span>
++          </h2>
++          <p className="text-xl text-slate-400 max-w-3xl mx-auto mb-16 leading-relaxed">
++            Skip what you already know. Learn only what's new. Save months of learning time with our tailored transition paths.
++          </p>
++
++          <div className="grid md:grid-cols-3 gap-6 mb-16">
++            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm text-left hover:border-blue-500/50 transition-all group">
++              <div className="flex items-center gap-3 mb-6">
++                <div className="p-3 rounded-2xl bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
++                  <Code2 className="w-6 h-6" />
++                </div>
++                <span className="font-bold text-slate-200">SE → AI Engineer</span>
++              </div>
++              <p className="text-3xl font-extrabold text-white mb-2">Skip 4 weeks</p>
++              <p className="text-slate-400">Bypass Python basics & DSA modules entirely.</p>
++            </div>
++
++            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm text-left hover:border-indigo-500/50 transition-all group">
++              <div className="flex items-center gap-3 mb-6">
++                <div className="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 group-hover:scale-110 transition-transform">
++                  <BarChart3 className="w-6 h-6" />
++                </div>
++                <span className="font-bold text-slate-200">DA → AI Engineer</span>
++              </div>
++              <p className="text-3xl font-extrabold text-white mb-2">Skip 3 weeks</p>
++              <p className="text-slate-400">Bypass Mathematics & SQL foundational courses.</p>
++            </div>
++
++            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm text-left hover:border-purple-500/50 transition-all group">
++              <div className="flex items-center gap-3 mb-6">
++                <div className="p-3 rounded-2xl bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform">
++                  <Globe className="w-6 h-6" />
++                </div>
++                <span className="font-bold text-slate-200">Web Dev → AI Engineer</span>
++              </div>
++              <p className="text-3xl font-extrabold text-white mb-2">Skip 2 weeks</p>
++              <p className="text-slate-400">Bypass Git, HTML/CSS and basic DB concepts.</p>
++            </div>
++          </div>
++
++          <Link href="/career-switch">
++            <button className="px-10 py-5 bg-white text-slate-900 rounded-full font-bold hover:bg-blue-50 transition-all flex items-center gap-2 mx-auto shadow-2xl shadow-white/5 group">
++              Try Career Switch <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
++            </button>
++          </Link>
++        </div>
++      </section>
++
++      {/* Pricing Section - Only shown for non-Pro users */}
++      {!isPaid && (
+        <section className="py-24 bg-slate-50 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indigo-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
 
-      {/* Pricing Section */}
-      <section className="py-24 bg-slate-50 relative overflow-hidden">
-        {/* Background decorative elements */}
-        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indigo-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Simple, transparent pricing</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Start for free, upgrade when you need more power.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-              <div className="mb-8">
-                <h3 className="text-2xl font-semibold text-slate-900">Free Plan</h3>
-                <p className="text-slate-500 mt-2">Perfect for exploring career options.</p>
-                <div className="mt-6 flex items-baseline text-5xl font-extrabold">
-                  ₹0
-                  <span className="ml-1 text-xl font-medium text-slate-500">/forever</span>
-                </div>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1 text-slate-600">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-500 shrink-0" />
-                  <span>Access to basic syllabuses</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-500 shrink-0" />
-                  <span>Community form access</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
-                  <span className="text-slate-400">Full detailed roadmaps</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
-                  <span className="text-slate-400">Curated resource links</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
-                  <span className="text-slate-400">Progress tracking</span>
-                </li>
-              </ul>
-              <button className="w-full py-4 px-6 rounded-full font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
-                Get Started Free
-              </button>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Simple, transparent pricing</h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">Start for free, upgrade when you need more power.</p>
             </div>
 
-            {/* Pro Plan */}
-            <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl shadow-blue-900/20 flex flex-col relative overflow-hidden transform md:-translate-y-4">
-              {/* Popular badge */}
-              <div className="absolute top-5 right-5">
-                <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                  Most Popular
-                </span>
-              </div>
-              
-              <div className="mb-8">
-                <h3 className="text-2xl font-semibold text-white">Pro Plan</h3>
-                <p className="text-slate-400 mt-2">Everything you need to master your path.</p>
-                <div className="mt-6 flex items-baseline text-5xl font-extrabold text-white">
-                  ₹200
-                  <span className="ml-1 text-xl font-medium text-slate-400">/month</span>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Free Plan */}
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+                <div className="mb-8">
+                  <h3 className="text-2xl font-semibold text-slate-900">Free Plan</h3>
+                  <p className="text-slate-500 mt-2">Perfect for exploring career options.</p>
+                  <div className="mt-6 flex items-baseline text-5xl font-extrabold">
+                    ₹0
+                    <span className="ml-1 text-xl font-medium text-slate-500">/forever</span>
+                  </div>
                 </div>
+                <ul className="space-y-4 mb-8 flex-1 text-slate-600">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-500 shrink-0" />
+                    <span>Access to basic syllabuses</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-500 shrink-0" />
+                    <span>Community form access</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
+                    <span className="text-slate-400">Full detailed roadmaps</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
+                    <span className="text-slate-400">Curated resource links</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-slate-300 shrink-0" />
+                    <span className="text-slate-400">Progress tracking</span>
+                  </li>
+                </ul>
+                <Link href={session ? "/roadmap" : "/login"} className="w-full">
+                  <button className="w-full py-4 px-6 rounded-full font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
+                    {session ? "View Roadmaps" : "Get Started Free"}
+                  </button>
+                </Link>
               </div>
-              <ul className="space-y-4 mb-8 flex-1 text-slate-300">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
-                  <span>Access to basic syllabuses</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
-                  <span>Community form access</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
-                  <span className="text-white">Full detailed roadmaps</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
-                  <span className="text-white">Curated resource links (Courses, etc)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
-                  <span className="text-white">Interactive progress tracker</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
-                  <span className="text-white">AI Career Guidance</span>
-                </li>
-              </ul>
-              <PaymentButton className="w-full py-4 px-6 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
-                Upgrade to Pro
-              </PaymentButton>
+
+              {/* Pro Plan */}
+              <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl shadow-blue-900/20 flex flex-col relative overflow-hidden transform md:-translate-y-4">
+                {/* Popular badge */}
+                <div className="absolute top-5 right-5">
+                  <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                    Most Popular
+                  </span>
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-2xl font-semibold text-white">Pro Plan</h3>
+                  <p className="text-slate-400 mt-2">Everything you need to master your path.</p>
+                  <div className="mt-6 flex items-baseline text-5xl font-extrabold text-white">
+                    ₹1
+                    <span className="ml-1 text-xl font-medium text-slate-400">/test</span>
+                  </div>
+                </div>
+                <ul className="space-y-4 mb-8 flex-1 text-slate-300">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
+                    <span>Access to basic syllabuses</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
+                    <span>Community form access</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
+                    <span className="text-white">Full detailed roadmaps</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
+                    <span className="text-white">Curated resource links (Courses, etc)</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
+                    <span className="text-white">Interactive progress tracker</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400 shrink-0" />
+                    <span className="text-white">AI Career Guidance</span>
+                  </li>
+                </ul>
+                <PaymentButton className="w-full py-4 px-6 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
+                  Upgrade to Pro
+                </PaymentButton>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-slate-950 py-12 border-t border-slate-900">

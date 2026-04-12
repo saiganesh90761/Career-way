@@ -1,5 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
+import prisma from "@/lib/prisma"
+
 import Image from "next/image"
 import Link from "next/link"
 import PaymentButton from "@/components/PaymentButton"
@@ -24,8 +26,15 @@ export default async function DashboardPage() {
   }
 
   // Use the paymentStatus or role from your session if available
-  // E.g., const isPro = session.user.paymentStatus === "PAID";
   const isPro = (session.user as any)?.paymentStatus === "PAID" || false;
+
+  const userProgress = await prisma.progress.findMany({
+    where: { userId: session.user.id }
+  })
+  
+  const completedCount = userProgress.filter(p => p.completed).length
+  const totalSections = 15 // AI Engineer has 15 weeks/sections
+  const percentage = Math.round((completedCount / totalSections) * 100)
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
@@ -100,7 +109,7 @@ export default async function DashboardPage() {
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Topics Completed</p>
-              <p className="text-2xl font-bold text-slate-900">0</p>
+              <p className="text-2xl font-bold text-slate-900">{completedCount}</p>
             </div>
           </div>
           
@@ -149,7 +158,7 @@ export default async function DashboardPage() {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-slate-900 mb-1">AI Engineer</h3>
-                      <p className="text-sm text-slate-500 font-medium">15 sections • 0 completed</p>
+                      <p className="text-sm text-slate-500 font-medium">{totalSections} sections • {completedCount} completed</p>
                     </div>
                   </div>
                   <Link href="/roadmap/ai-engineer" className="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 group">
@@ -160,11 +169,16 @@ export default async function DashboardPage() {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-semibold">
-                    <span className="text-blue-600">0% Complete</span>
-                    <span className="text-slate-400">Next: AI Basics + Python</span>
+                    <span className="text-blue-600">{percentage}% Complete</span>
+                    <span className="text-slate-400">
+                      {percentage === 100 ? "Roadmap Completed!" : "Keep going!"}
+                    </span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                    <div className="bg-blue-600 h-full rounded-full w-0 transition-all duration-1000"></div>
+                    <div 
+                      className="bg-blue-600 h-full rounded-full transition-all duration-1000" 
+                      style={{ width: `${percentage}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
